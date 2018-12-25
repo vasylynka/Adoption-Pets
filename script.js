@@ -11,21 +11,18 @@ var saveHelper = {
     storageKey: "item-",
 
     loadDate: function () {
-        var counter = Number(window.localStorage.getItem(this.counterKey));
-
-        console.log(counter); // F12
+        var key = window.localStorage.getItem(this.counterKey);
+        var countOfPets = Number(key);
  
-        if (counter > 0)
+        if (countOfPets > 0)
         {
             // проходимось по збережених тваринках
-            for (var i=0 ; i <= counter; i++)
+            for (var i=0 ; i <= countOfPets; i++)
             {
                 var key = saveHelper.storageKey+(i+1);
-                var item = localStorage.getItem(key);
+                var pet = localStorage.getItem(key);
 
-                console.log(item);
-
-                if (item === undefined) {
+                if (!pet) {
                    return;
                 }
          
@@ -40,20 +37,21 @@ var saveHelper = {
                             {description}
                         </p>
                     </figcaption>
-                </figure>`;
-         
-                var parsed = item.split("&");
+                </figure>`;         
             
-                for (var b = 0; b < parsed.length; b++)
-                {
-                    //name=Том
-                    var splitted = parsed[b].split("="); // [name, Том]
-                    
-            
-                    // {name} => Том
-                    template = template.replace("{"+splitted[0].trim()+"}", splitted[1]);
-            
-                }        
+                // заповнюємо інформацію про тваринку
+
+                if (pet.name) {                    
+                    template = template.replace("{name}", pet.name);
+                }
+
+                if (pet.file) {                    
+                    template = template.replace("{file}", pet.file);
+                }                
+
+                if (pet.breed) {                    
+                    template = template.replace("{breed}", pet.breed);
+                }                
             
                 $("#container").append($(template));          
             }          
@@ -62,7 +60,6 @@ var saveHelper = {
 
     addPet: function () {
         $(".btn-accent").click(function () {
-            console.log("onClick");
             var formIsValid = $(".new-profile-form").valid();
             
             if (formIsValid)
@@ -89,28 +86,43 @@ var saveHelper = {
         };
     },
     
-    saveData: function (file) {   
-        debugger;
-        var data = decodeURI($(".new-profile-form").serialize()); 
+    saveData: function (file) {
         // отримуємо дані з форми
         // в серіалізованому вигляді
+        var propertiesArray = $(".new-profile-form").serializeArray();
+        var newPet = null;
 
-        console.log(data);
-        
-        data += "&file = " + file; // додаємо значення картинки в коді base64       
-    
-        var counter =  Number(localStorage.getItem(this.counterKey));
-        
-        if(counter == 0) {
-          localStorage.setItem(this.counterKey, 1); // записуємо к-сть тваринок
-          localStorage.setItem(this.storageKey+"1", data); // записуємо дані про тваринку в localStorage
-        } else {
-          counter++;
-          localStorage.setItem(this.counterKey, counter); 
-          localStorage.setItem(this.storageKey+counter,data);
+        for (var i = 0; i < propertiesArray.length; i++)
+        {
+            var property = propertiesArray[0];
+
+            if (property.value) {                
+                pet[property.name] = property.value;
+            }
         }
-        window.location.reload();
+
+        debugger;
+        console.log(newPet);
+        
+        newPet.file = file; // додаємо значення картинки в коді base64       
     
+        var key = localStorage.getItem(this.counterKey);
+        var countOfPets = Number(key);
+        
+        if (countOfPets == 0) {
+          // якщо це перше додана тваринка
+          localStorage.setItem(this.counterKey, 1); // записуємо к-сть тваринок
+          localStorage.setItem(this.storageKey+"1", newPet); // записуємо дані про тваринку в localStorage
+        } else {
+          // збільшуємо кількість тваринок
+          countOfPets++;
+          // оновлюємо кількість тваринок
+          localStorage.setItem(this.counterKey, countOfPets); 
+          // зберігаємо нову тваринку 
+          localStorage.setItem(this.storageKey+countOfPets, newPet);
+        }
+
+        window.location.reload();    
       },
 
 }
